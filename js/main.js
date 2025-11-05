@@ -5,6 +5,7 @@ let gameLoopRef;
 let overlay;
 let startButton;
 let overlayMessage;
+let historyListElement;
 
 const config = {
     step: 0,
@@ -85,12 +86,39 @@ function refreshGame() {
     randomPositionBerry();
 }
 
+function saveResult(finalScore) {
+
+    const history = JSON.parse(localStorage.getItem('snakeHistory') || '[]');
+    const now = new Date();
+
+    const formattedDate = now.toLocaleDateString('uk-UA', { 
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit', 
+    }).replace(',', '');
+    
+    history.unshift({
+        score: finalScore,
+        date: formattedDate
+    });
+    
+    if (history.length > 10) {
+        history.pop();
+    }
+    
+    localStorage.setItem('snakeHistory', JSON.stringify(history));
+    
+    renderHistory(); 
+}
+
 function gameOver() {
     gameStatus = 'gameover';
     
     document.querySelector('#overlayTitle').textContent = 'Гру Завершено!';
+
+    saveResult(score); 
     
-    overlayMessage.innerHTML = `Ваш фінальний рахунок: ${score}`;
+    overlayMessage.innerHTML = `Ви зіткнулися самі з собою. <br>Ваш фінальний рахунок: ${score}`;
 
     startButton.textContent = 'Почати знову';
     overlay.style.display = 'flex'; 
@@ -199,13 +227,37 @@ function handleMovement(keyCode) {
     }
 }
 
+function renderHistory() {
+    const history = JSON.parse(localStorage.getItem('snakeHistory') || '[]');
+    
+    if (!historyListElement) return;
+
+    historyListElement.innerHTML = '';
+
+    if (history.length === 0) {
+        return;
+    }
+
+    history.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.classList.add('history-item');
+        
+        div.innerHTML = `
+            <span>${index + 1}. ${item.date}</span>
+            <span class="history-score">${item.score}</span>
+        `;
+        historyListElement.appendChild(div);
+    });
+}
+
+
 function init() {
     scoreBlock = document.querySelector(".game-score .score-count");
     overlay = document.querySelector(".game-overlay");
     startButton = document.querySelector("#startButton");
-    
-
     overlayMessage = document.querySelector(".game-overlay p"); 
+
+    historyListElement = document.querySelector("#history-list");
 
     startButton.addEventListener('click', startGame);
     
@@ -214,7 +266,10 @@ function init() {
     
     gameLoopRef = requestAnimationFrame( gameLoop );
     
-    document.querySelector('#overlayTitle').textContent = 'Змійка'
+    document.querySelector('#overlayTitle').textContent = 'Змійка';
+    overlayMessage.textContent = 'Керування: WASD або стрілочки. Натисніть "Почати" для старту.';
+
+    renderHistory();
 }
 
 init();
