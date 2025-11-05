@@ -1,17 +1,22 @@
 let scoreBlock;
 let score = 0;
+let gameStatus = 'paused'; 
+let gameLoopRef; 
+let overlay;
+let startButton;
+let finalScoreDisplay;
 
 const config = {
     step: 0,
-    maxStep: 6, // Це задає швидкість гри (60 кадрів / 6 кроків = 10 кроків на секунду)
+    maxStep: 6,
     sizeCell: 16,
-    sizeBerry: 16 / 4 // Радіус ягоди
+    sizeBerry: 16 / 4
 }
 
 let snake = {
     x: 160,
     y: 160,
-    dx: config.sizeCell, // Початковий рух вправо
+    dx: config.sizeCell,
     dy: 0,
     tails: [],
     maxTails: 3
@@ -26,15 +31,11 @@ let berry = {
 let canvas = document.querySelector("#game-canvas");
 let context = canvas.getContext("2d");
 
-// Функція для рандомного цілого числа
 function getRandomInt(min, max) {
     return Math.floor( Math.random() * (max - min) + min );
 }
 
-// --------------------- Функції гри ---------------------
-
 function drawScore() {
-    // Перевірка, чи scoreBlock вже визначено, щоб уникнути помилок
     if (scoreBlock) {
         scoreBlock.innerHTML = score;
     }
@@ -46,7 +47,6 @@ function incScore() {
 }
 
 function randomPositionBerry() {
-    // Генеруємо координати, кратні розміру клітинки (sizeCell)
     berry.x = getRandomInt( 0, canvas.width / config.sizeCell ) * config.sizeCell;
     berry.y = getRandomInt( 0, canvas.height / config.sizeCell ) * config.sizeCell;
 }
@@ -54,24 +54,19 @@ function randomPositionBerry() {
 function drawBerry() {
     context.beginPath();
     context.fillStyle = "#A00034";
-    // Центруємо ягоду всередині клітинки
     context.arc( berry.x + (config.sizeCell / 2 ), berry.y + (config.sizeCell / 2 ), config.sizeBerry, 0, 2 * Math.PI );
     context.fill();
 }
 
 function collisionBorder() {
-    // Змійка виходить за лівий край
     if (snake.x < 0) {
         snake.x = canvas.width - config.sizeCell;
-    // Змійка виходить за правий край
     } else if ( snake.x >= canvas.width ) {
         snake.x = 0;
     }
 
-    // Змійка виходить за верхній край
     if (snake.y < 0) {
         snake.y = canvas.height - config.sizeCell;
-    // Змійка виходить за нижній край
     } else if ( snake.y >= canvas.height ) {
         snake.y = 0;
     }
@@ -91,48 +86,46 @@ function refreshGame() {
     randomPositionBerry();
 }
 
+function gameOver() {
+    gameStatus = 'gameover';
+
+    document.querySelector('#overlayTitle').textContent = 'Гру Завершено!';
+    document.querySelector('#scoreMessage').textContent = 'Ви зіткнулися самі з собою. Спробуйте знову!';
+    finalScoreDisplay.textContent = score;
+    startButton.textContent = 'Почати знову';
+    overlay.style.display = 'flex'; 
+}
+
 
 function drawSnake() {
-    // 1. Рух змійки
     snake.x += snake.dx;
     snake.y += snake.dy;
 
-    // 2. Обробка зіткнення з межами поля (проходження на іншу сторону)
     collisionBorder();
     
-    // 3. Додаємо поточну позицію голови змійки в початок масиву хвостів
     snake.tails.unshift( { x: snake.x, y: snake.y } );
 
-    // 4. Якщо довжина хвоста перевищує максимальну, видаляємо останній елемент
     if ( snake.tails.length > snake.maxTails ) {
         snake.tails.pop();
     }
 
-    // 5. Малюємо змійку і перевіряємо зіткнення
     snake.tails.forEach( function(el, index){
-        // Голова
         if (index == 0) {
             context.fillStyle = "#FA0556";
-        } 
-        // Хвіст
-        else {
+        } else {
             context.fillStyle = "#A00034";
         }
         context.fillRect( el.x, el.y, config.sizeCell, config.sizeCell );
 
-        // Перевірка зіткнення з ягодою
         if ( el.x === berry.x && el.y === berry.y ) {
             snake.maxTails++;
             incScore();
             randomPositionBerry();
         }
-
-        // Перевірка зіткнення голови з хвостом
-        // Перевіряємо тільки, якщо el - це голова (index == 0), і порівнюємо з іншими частинами хвоста
         if (index === 0) {
              for( let i = 1; i < snake.tails.length; i++ ) {
                 if ( el.x === snake.tails[i].x && el.y === snake.tails[i].y ) {
-                    refreshGame();
+                    gameOver(); 
                 }
             }
         }
@@ -140,48 +133,85 @@ function drawSnake() {
 }
 
 function gameLoop() {
-    // Запускаємо наступний кадр
-    requestAnimationFrame( gameLoop );
+
+    gameLoopRef = requestAnimationFrame( gameLoop );
     
-    // Обмеження частоти кадрів (рух відбувається кожні config.maxStep кадрів)
+    if (gameStatus !== 'running') {
+        return;
+    }
+    
     if ( ++config.step < config.maxStep) {
         return;
     }
     config.step = 0;
 
-    // Очищаємо полотно перед малюванням
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     drawBerry();
     drawSnake();
 }
 
-// --------------------- Обробник натискання клавіш ---------------------
+
+function startGame() {
+
+    if (gameStatus === 'running') return;
+    
+    refreshGame(); 
+    
+    gameStatus = 'running';
+    overlay.style.display = 'none'; 
+}
 
 document.addEventListener("keydown", function (e) {
-    // Запобігаємо зворотному руху (наприклад, з W на S)
-    if (e.code == "KeyW" && snake.dy === 0) {
+    if (gameStatus !== 'running') {
+        const movementKeys = ["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+        if (movementKeys.includes(e.code)) {
+            startGame();
+        }
+
+        if (gameStatus === 'running') {
+            handleMovement(e.code);
+        }
+        return;
+    }
+
+    handleMovement(e.code);
+});
+
+function handleMovement(keyCode) {
+
+    if ((keyCode == "KeyW" || keyCode == "ArrowUp") && snake.dy === 0) {
         snake.dy = -config.sizeCell;
         snake.dx = 0;
-    } else if (e.code == "KeyA" && snake.dx === 0) {
+    } else if ((keyCode == "KeyA" || keyCode == "ArrowLeft") && snake.dx === 0) {
         snake.dx = -config.sizeCell;
         snake.dy = 0;
-    } else if (e.code == "KeyS" && snake.dy === 0) {
+    } else if ((keyCode == "KeyS" || keyCode == "ArrowDown") && snake.dy === 0) {
         snake.dy = config.sizeCell;
         snake.dx = 0;
-    } else if (e.code == "KeyD" && snake.dx === 0) {
+    } else if ((keyCode == "KeyD" || keyCode == "ArrowRight") && snake.dx === 0) {
         snake.dx = config.sizeCell;
         snake.dy = 0;
     }
-});
-
-// --------------------- Ініціалізація ---------------------
+}
 
 function init() {
+
     scoreBlock = document.querySelector(".game-score .score-count");
-    drawScore(); // Малюємо початковий рахунок (0)
-    randomPositionBerry(); // Створюємо першу ягоду
-    requestAnimationFrame( gameLoop ); // Запускаємо головний цикл гри
+    overlay = document.querySelector(".game-overlay");
+    startButton = document.querySelector("#startButton");
+    finalScoreDisplay = document.querySelector("#finalScore");
+
+    startButton.addEventListener('click', startGame);
+    
+    drawScore();
+    randomPositionBerry();
+    
+    gameLoopRef = requestAnimationFrame( gameLoop );
+
+    document.querySelector('#overlayTitle').textContent = 'Змійка';
+    document.querySelector('#scoreMessage').textContent = 'Керування: WASD або стрілочки. Натисніть "Почати" для старту.';
+    document.querySelector('.final-score-container').style.display = 'none';
 }
 
 init();

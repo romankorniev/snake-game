@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="style.css">
     <title>Snake Game</title>
 </head>
 <body>
@@ -12,14 +12,24 @@
     <div id="game">
         <div class="game-header">
             <div class="game-score">
-                <span class="score-count">0</span> 
+                <span class="score-count">0</span>
             </div>
         </div>
+        
         <div class="canvas-wrapper">
+            <div class="game-overlay">
+                <h2 id="overlayTitle">Змійка</h2>
+                <p id="scoreMessage">Натисніть "Почати" або будь-яку клавішу руху.</p>
+                <div class="final-score-container">
+                    Фінальний рахунок: <span id="finalScore">0</span>
+                </div>
+                <button id="startButton">Почати гру</button>
+            </div>
+            
             <canvas id="game-canvas" width="320" height="400"></canvas>
         </div>
     </div>
 
-    <script src="./js/main.js"></script> 
+    <script src="./js/main.js"></script>
 </body>
 </html>
