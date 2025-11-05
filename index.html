@@ -16,17 +16,31 @@
             </div>
         </div>
         
-        <div class="canvas-wrapper">
-            <div class="game-overlay">
-                <h2 id="overlayTitle">Змійка</h2>
-                <p id="scoreMessage">Натисніть "Почати" або будь-яку клавішу руху.</p>
-                <div class="final-score-container">
-                    Фінальний рахунок: <span id="finalScore">0</span>
-                </div>
-                <button id="startButton">Почати гру</button>
-            </div>
+        <div class="game-content-wrapper">
             
-            <canvas id="game-canvas" width="320" height="400"></canvas>
+            <div class="game-rules">
+                <h2>Правила гри</h2>
+                <ul>
+                    <li>Мета: З'їсти якомога більше ягід.</li>
+                    <li>Керування: Клавіші (WASD) або стрілочки (←, →, ↑, ↓).</li>
+                    <li>Якщо змійка зіткнеться зі своїм хвостом, гра завершується.</li>
+                    <li>Змійка може виходити за межі поля і з'являтися з протилежного боку.</li>
+                </ul>
+            </div>
+
+            <div class="canvas-wrapper">
+                
+                <div class="game-overlay">
+                    <h2 id="overlayTitle">Змійка</h2>
+                    
+                    <p class="overlay-message">Натисніть "Почати" або будь-яку клавішу для руху.</p> 
+                    <div class ='start-button'>
+                        <button id="startButton">Почати гру</button>
+                    </div>
+                </div>
+                
+                <canvas id="game-canvas" width="400" height="400"></canvas>
+            </div>
         </div>
     </div>
 

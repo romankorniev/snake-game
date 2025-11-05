@@ -4,19 +4,19 @@ let gameStatus = 'paused';
 let gameLoopRef; 
 let overlay;
 let startButton;
-let finalScoreDisplay;
+let overlayMessage;
 
 const config = {
     step: 0,
-    maxStep: 6,
+    maxStep: 8, 
     sizeCell: 16,
-    sizeBerry: 16 / 4
+    sizeBerry: 16 / 4 
 }
 
 let snake = {
-    x: 160,
-    y: 160,
-    dx: config.sizeCell,
+    x: 208, 
+    y: 208,
+    dx: config.sizeCell, 
     dy: 0,
     tails: [],
     maxTails: 3
@@ -26,7 +26,6 @@ let berry = {
     x: 0,
     y: 0
 } 
-
 
 let canvas = document.querySelector("#game-canvas");
 let context = canvas.getContext("2d");
@@ -76,8 +75,8 @@ function refreshGame() {
     score = 0;
     drawScore();
 
-    snake.x = 160;
-    snake.y = 160;
+    snake.x = 208; 
+    snake.y = 208;
     snake.tails = [];
     snake.maxTails = 3;
     snake.dx = config.sizeCell;
@@ -88,10 +87,11 @@ function refreshGame() {
 
 function gameOver() {
     gameStatus = 'gameover';
-
+    
     document.querySelector('#overlayTitle').textContent = 'Гру Завершено!';
-    document.querySelector('#scoreMessage').textContent = 'Ви зіткнулися самі з собою. Спробуйте знову!';
-    finalScoreDisplay.textContent = score;
+    
+    overlayMessage.innerHTML = `Ваш фінальний рахунок: ${score}`;
+
     startButton.textContent = 'Почати знову';
     overlay.style.display = 'flex'; 
 }
@@ -122,6 +122,7 @@ function drawSnake() {
             incScore();
             randomPositionBerry();
         }
+
         if (index === 0) {
              for( let i = 1; i < snake.tails.length; i++ ) {
                 if ( el.x === snake.tails[i].x && el.y === snake.tails[i].y ) {
@@ -132,8 +133,8 @@ function drawSnake() {
     } );
 }
 
-function gameLoop() {
 
+function gameLoop() {
     gameLoopRef = requestAnimationFrame( gameLoop );
     
     if (gameStatus !== 'running') {
@@ -153,42 +154,45 @@ function gameLoop() {
 
 
 function startGame() {
-
     if (gameStatus === 'running') return;
     
     refreshGame(); 
     
     gameStatus = 'running';
     overlay.style.display = 'none'; 
+    
+    overlayMessage.textContent = '';
 }
+
 
 document.addEventListener("keydown", function (e) {
     if (gameStatus !== 'running') {
         const movementKeys = ["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
         if (movementKeys.includes(e.code)) {
             startGame();
-        }
-
-        if (gameStatus === 'running') {
-            handleMovement(e.code);
+            if (gameStatus === 'running') {
+                handleMovement(e.code);
+            }
         }
         return;
     }
-
     handleMovement(e.code);
 });
 
-function handleMovement(keyCode) {
 
+function handleMovement(keyCode) {
     if ((keyCode == "KeyW" || keyCode == "ArrowUp") && snake.dy === 0) {
         snake.dy = -config.sizeCell;
         snake.dx = 0;
+        
     } else if ((keyCode == "KeyA" || keyCode == "ArrowLeft") && snake.dx === 0) {
         snake.dx = -config.sizeCell;
         snake.dy = 0;
+
     } else if ((keyCode == "KeyS" || keyCode == "ArrowDown") && snake.dy === 0) {
         snake.dy = config.sizeCell;
         snake.dx = 0;
+
     } else if ((keyCode == "KeyD" || keyCode == "ArrowRight") && snake.dx === 0) {
         snake.dx = config.sizeCell;
         snake.dy = 0;
@@ -196,11 +200,12 @@ function handleMovement(keyCode) {
 }
 
 function init() {
-
     scoreBlock = document.querySelector(".game-score .score-count");
     overlay = document.querySelector(".game-overlay");
     startButton = document.querySelector("#startButton");
-    finalScoreDisplay = document.querySelector("#finalScore");
+    
+
+    overlayMessage = document.querySelector(".game-overlay p"); 
 
     startButton.addEventListener('click', startGame);
     
@@ -208,10 +213,8 @@ function init() {
     randomPositionBerry();
     
     gameLoopRef = requestAnimationFrame( gameLoop );
-
-    document.querySelector('#overlayTitle').textContent = 'Змійка';
-    document.querySelector('#scoreMessage').textContent = 'Керування: WASD або стрілочки. Натисніть "Почати" для старту.';
-    document.querySelector('.final-score-container').style.display = 'none';
+    
+    document.querySelector('#overlayTitle').textContent = 'Змійка'
 }
 
 init();
